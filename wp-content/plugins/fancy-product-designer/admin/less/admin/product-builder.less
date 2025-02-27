@@ -1,0 +1,429 @@
+#fpd-preview-wrapper>.fpd-main-wrapper>.fpd-product-stage {
+	border-right: 1px dashed #ccc;
+}
+
+#fpd-fixed-side {
+	position: fixed;
+	right: 0;
+	top: 120px;
+	z-index: 10000;
+	box-shadow: -3px 0px 7px 0px rgba(0,0,0,0.2);
+}
+
+#fpd-fixed-side > * {
+	display: block;
+	padding-right: 18px;
+}
+
+
+/********************************
+**** PRODUCT BUILDER ***
+********************************/
+
+#fpd-product-builder,
+#fpd-product-builder * {
+	box-sizing: border-box;
+}
+
+#fpd-product-builder .add-new-h2 {
+	display: inline-block;
+	margin-bottom: 10px;
+}
+
+#fpd-product-builder-head .select2 {
+	z-index: 999 !important;
+}
+
+
+/* Layers Panel Product Builder Page */
+
+#fpd-manage-elements {
+	position: relative;
+}
+
+#fpd-manage-elements > .fpd-ui-blocker {
+	display: block;
+}
+
+#fpd-elements-list {
+	padding: 10px;
+	max-height: 290px;
+	overflow: auto;
+}
+
+#fpd-elements-list > .fpd-layer-item {
+	background: @itemBackgroundColor;
+	border:1px solid @itemBorderColor;
+	width: 150px;
+	height: 120px;
+	padding: 5px;
+	margin: 10px 10px 0 0;
+	overflow: hidden;
+	cursor: move;
+	float: left;
+	position: relative;
+}
+
+#fpd-elements-list > .fpd-layer-item.fpd-active-item {
+	background: #f2f2f2;
+	border:1px solid #c8c8c8;
+	-webkit-transition:background 500ms ease-out;
+	transition:background 500ms ease-out;
+}
+
+.fpd-layer-item input,
+.fpd-layer-item textarea {
+	width: 100%;
+	resize: none;
+}
+
+.fpd-layer-item textarea {
+	width: 100%;
+	margin-top: 2px;
+	height: calc(~"100% - 52px");
+}
+
+.fpd-layer-item img {
+	max-width: 100%;
+	max-height: calc(~"100% - 40px");
+	position: absolute;
+	top: 37px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.fpd-layer-item--image textarea {
+	display: none;
+}
+
+.fpd-layer-item > .fpd-layer-item-tools {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 25px;
+	background: rgba(255,255,255, 0.9);
+	z-index: 10;
+	text-align: center;
+}
+
+.fpd-layer-item-tools > a {
+	text-decoration: none !important;
+	font-size: 16px;
+	padding: 0 4px;
+	line-height: 25px;
+}
+
+#fpd-elements-list .fpd-sortable-placeholder {
+	float: left;
+	background: #fafafa;
+	width: 150px;
+	height: 120px;
+	margin: 10px 10px 0 0;
+}
+
+
+/* Product Stage */
+
+#fpd-actions-toolbar {
+	margin-bottom: 10px;
+}
+
+#fpd-actions-toolbar > * {
+	float: left;
+	margin-right: 5px;
+}
+
+#fpd-actions-toolbar > span,
+.fpd-toolbar-btn {
+	display: inline-block;
+	padding: 8px 10px;
+	border: 1px solid @itemBorderColor;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+#fpd-actions-toolbar > span.fpd-active {
+	background: @itemBorderColor;
+}
+
+#fpd-actions-toolbar > div {
+	display: inline-block;
+}
+
+.fpd-button-modal {
+	position: relative;
+}
+
+.fpd-button-modal > .fpd-dialog {
+	display: none;
+	min-width: 300px;
+	min-height: 200px;
+	position: absolute;
+	top: 100%;
+	left: -10px;
+	background: rgba(255,255,255, 1);
+	padding: 20px 10px;
+	z-index: 100;
+	box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.15);
+	border-radius: 2px;
+}
+
+.fpd-button-modal > .fpd-dialog.fpd-show {
+	display: block;
+}
+
+.fpd-button-modal > .fpd-dialog .fpd-drag-handler {
+	width: 100%;
+	height: 15px;
+	background: #444444;
+	position: absolute;
+	top: 0;
+	left: 0;
+	cursor: move;
+}
+
+.fpd-button-modal > .fpd-dialog h4 {
+	margin-bottom: 15px;
+	margin-top: 0;
+	font-weight: 100;
+	text-transform: uppercase;
+}
+
+.fpd-button-modal > .fpd-dialog input[type="number"] {
+	float: right;
+	width: 80px;
+}
+
+.fpd-button-modal .fpd-input-button {
+	float: right;
+}
+
+.fpd-button-modal .fpd-input-button > input[type="number"] {
+	width: 50px;
+	float: left;
+	border-right: none;
+}
+
+.fpd-button-modal .fpd-input-button > button {
+	padding: 0 8px 1px;
+    border-radius: 0;
+    box-shadow: none !important;
+}
+
+.fpd-button-modal .radykal-columns-two {
+	margin-top: 10px;
+	margin-bottom: 0;
+}
+
+.fpd-button-modal .radykal-columns-two > div {
+	min-width: auto;
+}
+
+.fpd-button-modal .fpd-dialog > button {
+	margin-top: 20px;
+}
+
+
+#fpd-canvas-container {
+	position: relative;
+	overflow: hidden;
+}
+
+#fpd-element-props-sidebar {
+	background: rgba(255,255,255, 0.97);
+	border: 1px solid @itemBorderColor;
+	position: absolute;
+	top: 0;
+	right: 0;
+    width: 300px;
+    height: 100%;
+    z-index: 10000;
+    overflow: visible;
+    transform: translateX(150%);
+    box-shadow: -1px 0px 6px 0px rgba(0,0,0,0.1);
+}
+
+#fpd-canvas-container.fpd-element-selected > #fpd-element-props-sidebar {
+	transform: translateX(0);
+}
+
+#fpd-canvas-container.fpd-element-selected > #fpd-element-props-sidebar.fpd-closed {
+	transform: translateX(100%);
+}
+
+#fpd-element-props-sidebar.fpd-dock-left {
+	left: 0;
+	right: auto;
+	transform: translateX(-150%);
+}
+
+#fpd-canvas-container.fpd-element-selected > #fpd-element-props-sidebar.fpd-dock-left {
+	transform: translateX(0);
+}
+
+#fpd-canvas-container.fpd-element-selected > #fpd-element-props-sidebar.fpd-closed.fpd-dock-left {
+	transform: translateX(-100%);
+}
+
+#fpd-element-props-sidebar #fpd-sidebar-actions {
+	background: #f7f7f7;
+	border: 1px solid rgba(0,0,0, 0.1);
+	border-right: none;
+	color: rgba(0,0,0, 0.7);
+	position: absolute;
+	left: 0;
+	top: -1px;
+	width: 30px;
+	font-size: 18px;
+	text-align: center;
+	transform: translateX(-100%);
+	box-shadow: -1px 0px 6px 0px rgba(0,0,0,0.1);
+}
+
+#fpd-element-props-sidebar.fpd-dock-left #fpd-sidebar-actions {
+	right: 0;
+	left: auto;
+	border: 1px solid rgba(0,0,0, 0.1);
+	border-left: none;
+	transform: translateX(100%);
+	box-shadow: 1px 0px 6px 0px rgba(0,0,0,0.1);
+}
+
+ #fpd-sidebar-actions > div {
+	height: 30px;
+	line-height: 30px;
+	cursor: pointer;
+	width: 100%;
+}
+
+#fpd-sidebar-actions > div > i {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#fpd-sidebar-actions > div > i.fpd-admin-icon-dock-right {
+	display: none;
+}
+
+#fpd-element-props-sidebar.fpd-dock-left .fpd-admin-icon-dock-left {
+	display: none !important;
+}
+
+#fpd-element-props-sidebar.fpd-dock-left .fpd-admin-icon-dock-right {
+	display: inline-block !important;
+}
+
+#fpd-element-props-sidebar.fpd-closed #fpd-element-props-sidebar-close > i {
+	transform: rotate(45deg);
+}
+
+#fpd-element-props-sidebar > .fpd-accordion {
+	height: 100%;
+	overflow: auto;
+}
+
+#fpd-canvas-container .radykal-settings-form table {
+	background: none;
+	border-collapse: collapse;
+	width: 100%;
+	table-layout: fixed;
+}
+
+#fpd-canvas-container .radykal-settings-form table th {
+	text-align: left;
+	padding-left: 5px;
+	font-weight: 400;
+	text-transform: uppercase;
+}
+
+#fpd-canvas-container .radykal-settings-form table tr td {
+	padding: 0 5px 10px;
+}
+
+#fpd-canvas-container .radykal-settings-form table tr:last-child td {
+	padding-bottom: 0;
+}
+
+#fpd-canvas-container .radykal-settings-form table td > .fpd-prop-title {
+	margin-bottom: 2px;
+	color: rgba(0,0,0, 0.6);
+	font-size: 10px;
+	line-height: 14px;
+	text-transform: uppercase;
+	position: relative;
+}
+
+#fpd-canvas-container .fpd-prop-title > label {
+	margin-right: 15px;
+}
+
+#fpd-canvas-container .fpd-prop-title > i.fpd-admin-tooltip {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+#fpd-element-props-sidebar .fpd-button-group {
+	border-radius: 0;
+}
+
+#fpd-element-props-sidebar .fpd-button-group > span {
+	padding: 4px 8px;
+}
+
+#fpd-element-props-sidebar #fpd-color-tags {
+	margin-top: 5px;
+}
+
+#fpd-preview-wrapper {
+	position: relative;
+	overflow: auto;
+}
+
+#fpd-preview-wrapper > .fpd-main-wrapper {
+	border:1px solid @itemBorderColor;
+	position: relative;
+	overflow: auto;
+}
+
+#fpd-preview-wrapper  > .fpd-main-wrapper > .fpd-product-stage {
+	max-width: none;
+}
+
+#fpd-preview-wrapper.fpd-responsive  > .fpd-main-wrapper > .fpd-product-stage {
+	max-width: 100%;
+}
+
+.fpd-responsive,
+.fpd-responsive * {
+	max-width: 100%;
+	box-sizing: border-box;
+}
+
+#fpd-preview-wrapper.fpd-responsive-tablet {
+	width: 767px !important;
+}
+
+#fpd-preview-wrapper.fpd-responsive-phone {
+	width: 567px !important;
+}
+
+#fpd-preview-wrapper.fpd-responsive-fit {
+	overflow: hidden;
+}
+
+
+#fpd-preview-wrapper .fpd-modal-lock {
+	display: none !important;
+}
+
+.fpd-element-toolbar-smart {
+	z-index: 1000 !important;
+}
+
+
+.wp-admin .fpd-element-toolbar-smart .fpd-tool-reset,
+.wp-admin .fpd-element-toolbar-smart .fpd-curved-text-switcher {
+	display: none !important;
+}

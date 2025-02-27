@@ -1,0 +1,166 @@
+ <?php
+/**
+ * Template Name: Produktübersicht
+ *
+ * @package OceanWP WordPress theme
+ */
+get_header(); 
+
+
+?>
+
+
+
+
+	<?php do_action( 'ocean_before_content_wrap' ); ?>
+
+	<div id="content-wrap" class="container clr">
+
+		<?php do_action( 'ocean_before_primary' ); ?>
+
+		<div id="primary" class="content-area clr">
+
+			<?php do_action( 'ocean_before_content' ); ?>
+
+			<div id="content" class="site-content clr">
+
+
+				<?php do_action( 'ocean_before_content_inner' ); ?>
+
+				<?php
+				// Elementor `single` location
+				if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'single' ) ) {
+					
+					// Start loop
+					while ( have_posts() ) : the_post();
+
+							// EDD Page
+							if ( is_singular( 'download') ) {
+								get_template_part( 'partials/edd/single' );
+							}
+
+							// Single Page
+							elseif ( is_singular( 'page' ) ) {
+
+								//get_template_part( 'partials/page/layout' );
+							?>
+
+<h2 class="shop_seite_titel"><?php print get_the_title(); ?></h2>
+
+<h2 class="shop_seite_inhalt"><?php print the_content(); ?></h2>
+
+<?php //do_action('woocommerce_filter_before_shop'); ?>
+
+<div class="woocommerce">
+<?php
+
+function multiexplode ($delimiters,$string) {
+
+    $ready = str_replace($delimiters, $delimiters[0], $string);
+    $launch = explode($delimiters[0], $ready);
+    return  $launch;
+}
+
+$produkt_pod = pods( 'page', get_the_id() );
+
+$produkt_kategorie = $produkt_pod->display('kategorie');
+$produkt_kategorie = multiexplode(array(",","and"),$produkt_kategorie);
+//print_r($produkt_kategorie)."---";
+
+if(!function_exists('wc_get_products')) {
+    return;
+  }
+  $paged                   = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
+  $ordering                = WC()->query->get_catalog_ordering_args();
+  $ordering['orderby']     = array_shift(explode(' ', $ordering['orderby']));
+  $ordering['orderby']     = stristr($ordering['orderby'], 'price') ? 'meta_value_num' : $ordering['orderby'];
+  $products_per_page       = 100; //apply_filters('loop_shop_per_page', wc_get_default_products_per_row() * wc_get_default_product_rows_per_page());
+
+  $products_ids            = wc_get_products(array(
+    'status'               => 'publish',
+    'limit'                => $products_per_page,
+    'page'                 => $paged,
+    'paginate'             => true,
+    'return'               => 'ids',
+    'orderby'              => $ordering['orderby'],
+    'order'                => $ordering['order'],
+    'category' => $produkt_kategorie
+  ));
+
+  wc_set_loop_prop('current_page', $paged);
+  wc_set_loop_prop('is_paginated', wc_string_to_bool(true));
+  wc_set_loop_prop('page_template', get_page_template_slug());
+  wc_set_loop_prop('per_page', $products_per_page);
+  wc_set_loop_prop('total', $products_ids->total);
+  wc_set_loop_prop('total_pages', $products_ids->max_num_pages);
+
+  if($products_ids) {
+    do_action('woocommerce_before_shop_loop');
+    woocommerce_product_loop_start();
+      foreach($products_ids->products as $featured_product) {
+        $post_object = get_post($featured_product);
+        setup_postdata($GLOBALS['post'] =& $post_object);
+     
+
+        wc_get_template_part('content', 'product');
+
+
+      }
+      wp_reset_postdata();
+    woocommerce_product_loop_end();
+    do_action('woocommerce_after_shop_loop');
+  } else {
+    do_action('woocommerce_no_products_found');
+  }
+
+
+
+?>
+</div>
+
+
+
+
+
+
+							<?php
+
+							}
+
+							// Library post types
+		    				elseif ( is_singular( 'oceanwp_library' )
+		    						|| is_singular( 'elementor_library' ) ) {
+
+		    					get_template_part( 'partials/library/layout' );
+
+		    				}
+
+							// All other post types.
+							else {
+
+		    					get_template_part( 'partials/single/layout', get_post_type() );
+
+		  					}
+
+					endwhile;
+
+				} ?>
+
+				<?php do_action( 'ocean_after_content_inner' ); ?>
+
+			</div><!-- #content -->
+
+			<?php do_action( 'ocean_after_content' ); ?>
+
+		</div><!-- #primary -->
+
+		<?php do_action( 'ocean_after_primary' ); ?>
+
+	</div><!-- #content-wrap -->
+
+	<?php do_action( 'ocean_after_content_wrap' ); ?>
+
+<?php get_footer(); 
+
+
+?>

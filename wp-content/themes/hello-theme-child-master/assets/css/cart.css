@@ -1,0 +1,284 @@
+/* SchoenGruesse - Warenkorb Styles */
+
+/* Warenkorb Titel */
+.woocommerce-cart .entry-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.woocommerce-cart .entry-title {
+    font-size: 1.5rem !important;
+    font-weight: normal !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Hauptcontainer des Warenkorbs */
+.woocommerce-cart .woocommerce {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Tabelle im Warenkorb */
+.woocommerce-cart table.cart {
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.woocommerce-cart .woocommerce {
+    background: transparent !important;
+}
+
+table td, table th {
+    padding: 15px;
+    line-height: 1.5;
+    vertical-align: top;
+    border: 1px solid transparent !important;
+  }
+
+.woocommerce-cart table.cart th {
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.woocommerce-cart table.cart td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Produktbild */
+.woocommerce-cart table.cart img {
+    width: 80px;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* Produktname */
+.woocommerce-cart table.cart td.product-name a {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.woocommerce-cart table.cart td.product-name a:hover {
+    color: #666;
+}
+
+/* Mengenfeld */
+.woocommerce-cart table.cart td.product-quantity .qty {
+    width: 70px;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Entfernen-Button */
+.woocommerce-cart table.cart td.product-remove a {
+    color: #ff4444 !important;
+    font-size: 1.5rem;
+}
+
+/* Aktualisieren Button */
+.woocommerce-cart .actions .button {
+    color: #333;
+    border: 1px solid #ddd;
+    padding: 0.8rem 1.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.woocommerce-cart .actions .button:hover {
+    background: transparent;
+    border-color: #333;
+}
+
+/* Warenkorb Totals */
+.cart_totals {
+    padding: 2rem;
+    border-radius: 8px;
+    background: transparent;
+}
+
+.cart_totals h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.cart_totals table {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.cart_totals th {
+    text-align: left;
+    padding: 0.8rem 0;
+}
+
+.cart_totals td {
+    text-align: right;
+    padding: 0.8rem 0;
+}
+
+/* Zur Kasse Button */
+.wc-proceed-to-checkout .checkout-button {
+    background-color: #4CAF50 !important;
+    color: white !important;
+    padding: 1rem 2rem !important;
+    border-radius: 4px !important;
+    text-align: center;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease !important;
+}
+
+.wc-proceed-to-checkout .checkout-button:hover {
+    background-color: #45a049 !important;
+}
+
+/* Entferne alle Hintergründe */
+.woocommerce-cart .cart-collaterals,
+.woocommerce-cart .cart_totals,
+.woocommerce-cart table.shop_table,
+.woocommerce-cart table.shop_table td,
+.woocommerce-cart table.shop_table th,
+.woocommerce-cart .cart-collaterals .cart_totals tr td, 
+.woocommerce-cart .cart-collaterals .cart_totals tr th,
+.woocommerce-cart table.cart td.actions,
+.woocommerce-cart table.cart th.product-name,
+.woocommerce-cart table.cart th.product-price,
+.woocommerce-cart table.cart th.product-quantity,
+.woocommerce-cart table.cart th.product-subtotal {
+    background: transparent !important;
+}
+
+/* Entferne Hover-Effekte */
+.woocommerce-cart table.cart tr:hover,
+.woocommerce-cart table.cart td:hover,
+.woocommerce-cart table.cart th:hover {
+    background: transparent !important;
+}
+
+/* Entferne Zebra-Streifen */
+.woocommerce-cart table.cart tr:nth-child(even),
+.woocommerce-cart table.cart tr:nth-child(odd) {
+    background: transparent !important;
+}
+
+/* Entferne zusätzliche Hintergründe */
+.woocommerce a.remove:hover {
+    color: #fff !important;
+    background: transparent;
+}
+
+/* Gutschein-Bereich */
+.woocommerce-form-coupon-toggle .woocommerce-info {
+    background-color: #758e9e !important;
+    color: #ffffff !important;
+    border-top-color: #ffffff !important;
+}
+
+.woocommerce-form-coupon-toggle .woocommerce-info::before {
+    color: #ffffff !important;
+}
+
+.woocommerce-form-coupon-toggle .woocommerce-info a {
+    color: #ffffff !important;
+    text-decoration: underline;
+}
+
+/* PayPal-Infobereich */
+#payment .payment_method_paypal .about_paypal,
+.payment_method_paypal .payment_method_paypal_description {
+    background-color: #758e9e !important;
+    color: #ffffff !important;
+    padding: 15px !important;
+    border-radius: 4px !important;
+    margin: 10px 0 !important;
+}
+
+#payment .payment_method_paypal .about_paypal {
+    float: none !important;
+    margin-left: 10px !important;
+    color: #ffffff !important;
+    text-decoration: underline;
+}
+
+.payment_box.payment_method_paypal {
+    background-color: #758e9e !important;
+    color: #ffffff !important;
+}
+
+.payment_box.payment_method_paypal::before {
+    border-bottom-color: #758e9e !important;
+}
+
+
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .woocommerce-cart table.cart td.product-thumbnail {
+        display: none;
+    }
+    
+    .woocommerce-cart table.cart td {
+        padding: 0.5rem;
+    }
+    
+    .cart_totals {
+        padding: 1rem;
+    }
+}
+.page-content h2 {
+    color: #333 !important;
+  font-size: 37px;
+  text-align: center;
+  padding-top: 30px;
+  font-size: 2rem;
+}
+
+.woocommerce-page .cart-collaterals .cart_totals {
+
+    width: 100% !important;
+ 
+  }
+
+  .woocommerce table.shop_table thead {
+    background-color: #fff;
+  }
+
+  .woocommerce .cart-collaterals h2 {
+
+    display: none;
+  }
+
+.woocommerce .checkout-button {
+    background: #ee8378 !important;
+}
+
+.woocommerce .checkout-button:hover {
+    background: #ee8378 !important;
+}
+
+.woocommerce-info {
+    border-top-color: #ee8378 !important;
+  }
+
+  .wc-gzd-order-submit .button  {
+
+    width: 100% !important;
+
+  }
+
+  .woocommerce-info::before {
+    color: #ee8378 !important;
+  }
+
+  #add_payment_method #payment, .woocommerce-cart #payment, .woocommerce-checkout #payment {
+    background: rgba(117, 142, 158, 0);
+  
+  }
