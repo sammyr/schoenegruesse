@@ -306,7 +306,7 @@ function hello_child_enqueue_fpd_gallery_integration() {
             'fpd-gallery-integration',
             get_stylesheet_directory_uri() . '/includes/fpd-gallery-integration.js',
             array('jquery'),
-            '1.5.0_' . time(), // Zufälligen Timestamp hinzufügen, um Cache-Probleme zu vermeiden
+            '1.8.6' . '?' . time(),
             true
         );
     }

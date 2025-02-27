@@ -1,7 +1,7 @@
 /**
  * FPD Galerie-Integration
  * Ersetzt alle Bilder in der WooCommerce-Galerie mit FPD-Bildern
- * Version: 1.0.7
+ * Version: 1.8.6
  */
 jQuery(document).ready(function($) {
     // Globale Variablen
@@ -59,23 +59,72 @@ jQuery(document).ready(function($) {
         
         // Funktion zum Speichern der Original-Bilder
         function saveOriginalGalleryImages() {
-            var $galleryImages = $('.woocommerce-product-gallery__wrapper .woocommerce-product-gallery__image');
-            originalGalleryImages = [];
-            
-            $galleryImages.each(function(index) {
-                var $img = $(this).find('img');
-                var $link = $(this).find('a');
+            try {
+                var $gallery = $('.woocommerce-product-gallery');
                 
-                originalGalleryImages.push({
-                    index: index,
-                    imgSrc: $img.attr('src'),
-                    imgDataSrc: $img.attr('data-src'),
-                    imgDataLargeImage: $img.attr('data-large_image'),
-                    linkHref: $link.attr('href')
+                if ($gallery.length === 0) {
+                    debugLog('WooCommerce-Galerie nicht gefunden');
+                    return;
+                }
+                
+                var $galleryImages = $gallery.find('.woocommerce-product-gallery__image');
+                
+                if ($galleryImages.length === 0) {
+                    debugLog('Keine Galeriebilder gefunden');
+                    return;
+                }
+                
+                debugLog('Speichere ' + $galleryImages.length + ' ursprüngliche Galeriebilder');
+                
+                originalGalleryImages = [];
+                
+                $galleryImages.each(function(index) {
+                    var $img = $(this).find('img');
+                    var $a = $(this).find('a');
+                    
+                    var imgSrc = '';
+                    var imgDataSrc = '';
+                    var imgLargeImage = '';
+                    var aHref = '';
+                    
+                    if ($img.length > 0) {
+                        imgSrc = $img.attr('src') || '';
+                        imgDataSrc = $img.attr('data-src') || '';
+                        imgLargeImage = $img.attr('data-large_image') || '';
+                    }
+                    
+                    if ($a.length > 0) {
+                        aHref = $a.attr('href') || '';
+                    }
+                    
+                    // Wähle die beste verfügbare Quelle
+                    var bestSource = '';
+                    
+                    if (imgLargeImage && imgLargeImage.length > 0) {
+                        bestSource = imgLargeImage;
+                    } else if (aHref && aHref.length > 0) {
+                        bestSource = aHref;
+                    } else if (imgDataSrc && imgDataSrc.length > 0) {
+                        bestSource = imgDataSrc;
+                    } else if (imgSrc && imgSrc.length > 0) {
+                        bestSource = imgSrc;
+                    }
+                    
+                    originalGalleryImages.push({
+                        index: index,
+                        imgSrc: bestSource,
+                        imgDataSrc: imgDataSrc,
+                        imgLargeImage: imgLargeImage,
+                        aHref: aHref
+                    });
+                    
+                    debugLog('Originalbild #' + (index+1) + ' gespeichert: ' + bestSource);
                 });
                 
-                debugLog('Original-Bild #' + (index+1) + ' gespeichert', originalGalleryImages[index]);
-            });
+                debugLog('Ursprüngliche Galeriebilder gespeichert: ' + originalGalleryImages.length);
+            } catch (e) {
+                debugLog('Fehler beim Speichern der ursprünglichen Galeriebilder', e);
+            }
         }
         
         // Event-Listener für FPD und Galerie
@@ -186,98 +235,227 @@ jQuery(document).ready(function($) {
             }, 1500); // 1,5 Sekunden Verzögerung
         }
         
-        // Methode 1: Direkte Canvas-Erfassung
+        // Erfasse Canvas-Bilder
         function captureCanvasImages() {
-            debugLog('Starte Canvas-Erfassung');
-            
-            var images = [];
-            var canvasSelectors = [
-                '.fpd-main-wrapper canvas',
-                '.fpd-views-wrapper canvas',
-                '.fpd-product-stage canvas',
-                '.fpd-mainbar canvas',
-                '.fpd-container canvas',
-                '.fpd-design-preview canvas',
-                '.fpd-views-selection canvas'
-            ];
-            
-            // Alle Canvas-Elemente sammeln
-            var allCanvases = [];
-            
-            for (var i = 0; i < canvasSelectors.length; i++) {
-                var canvases = $(canvasSelectors[i]);
-                if (canvases.length > 0) {
-                    debugLog('Gefunden: ' + canvases.length + ' Canvas-Elemente mit Selektor ' + canvasSelectors[i]);
-                    canvases.each(function() {
-                        allCanvases.push(this);
-                    });
-                }
-            }
-            
-            // Duplizierte Canvas-Elemente entfernen
-            var uniqueCanvases = [];
-            var canvasIds = {};
-            
-            for (var i = 0; i < allCanvases.length; i++) {
-                var canvas = allCanvases[i];
-                var canvasId = canvas.id || ('canvas_' + i);
+            try {
+                debugLog('Starte Canvas-Erfassung');
                 
-                if (!canvasIds[canvasId]) {
-                    canvasIds[canvasId] = true;
-                    uniqueCanvases.push(canvas);
+                // Finde alle Canvas-Elemente
+                var canvasElements = document.querySelectorAll('canvas');
+                debugLog('Gefunden: ' + canvasElements.length + ' Canvas-Elemente');
+                
+                // Speichere die Anzahl der Originalbilder in der Galerie
+                var originalGalleryCount = originalGalleryImages.length;
+                debugLog('Anzahl der Originalbilder in der Galerie: ' + originalGalleryCount);
+                
+                // Bestimme die erwartete Anzahl der Ansichten
+                var expectedViewCount = 0;
+                if (window.fancyProductDesigner && window.fancyProductDesigner.viewInstances) {
+                    expectedViewCount = window.fancyProductDesigner.viewInstances.length;
+                    debugLog('Erwartete Anzahl der Ansichten: ' + expectedViewCount);
                 }
-            }
-            
-            debugLog('Insgesamt ' + uniqueCanvases.length + ' einzigartige Canvas-Elemente gefunden');
-            
-            // Bilder aus Canvas-Elementen extrahieren
-            for (var i = 0; i < uniqueCanvases.length; i++) {
-                try {
-                    var canvas = uniqueCanvases[i];
+                
+                // Sammle alle gültigen Canvas-Bilder
+                var images = [];
+                var validCanvasCount = 0;
+                
+                for (var i = 0; i < canvasElements.length; i++) {
+                    var canvas = canvasElements[i];
+                    
+                    // Prüfe, ob das Canvas eine gültige Größe hat
+                    if (canvas.width <= 0 || canvas.height <= 0) {
+                        debugLog('Canvas #' + (i+1) + ' hat keine gültige Größe: ' + canvas.width + 'x' + canvas.height + ', überspringe');
+                        continue;
+                    }
                     
                     // Prüfe, ob das Canvas leer ist
-                    var isEmpty = isCanvasEmpty(canvas);
+                    if (isCanvasEmpty(canvas)) {
+                        debugLog('Canvas #' + (i+1) + ' ist leer, überspringe');
+                        continue;
+                    }
                     
-                    if (!isEmpty) {
+                    // Versuche, das Canvas in eine Daten-URL zu konvertieren
+                    try {
                         var dataURL = canvas.toDataURL('image/png');
                         
-                        // Prüfe, ob das Bild gültig ist
+                        // Prüfe, ob die Daten-URL gültig ist
                         if (dataURL && dataURL.indexOf('data:image') === 0) {
+                            // Prüfe, ob die Daten-URL eine angemessene Länge hat
+                            if (dataURL.length < 5000) {
+                                debugLog('Canvas #' + (i+1) + ' hat verdächtig kurze Daten-URL: ' + dataURL.length + ' Zeichen, überspringe');
+                                continue;
+                            }
+                            
                             images.push(dataURL);
+                            validCanvasCount++;
                             debugLog('Canvas #' + (i+1) + ' erfolgreich erfasst');
                         } else {
-                            debugLog('Ungültiges Bild für Canvas #' + (i+1) + ', überspringe');
+                            debugLog('Canvas #' + (i+1) + ' hat ungültige Daten-URL, überspringe');
                         }
-                    } else {
-                        debugLog('Canvas #' + (i+1) + ' ist leer, überspringe');
+                    } catch (e) {
+                        debugLog('Fehler beim Konvertieren von Canvas #' + (i+1) + ' in Daten-URL', e);
                     }
-                } catch (e) {
-                    debugLog('Fehler beim Erfassen von Canvas #' + (i+1), e);
                 }
+                
+                debugLog('Canvas-Erfassung abgeschlossen, ' + validCanvasCount + ' Bilder gefunden');
+                
+                // Wenn wir keine Bilder gefunden haben, versuche alternative Methoden
+                if (images.length === 0) {
+                    debugLog('Keine Canvas-Bilder gefunden, versuche alternative Methoden');
+                    captureImagesAlternative();
+                    return;
+                }
+                
+                // Wenn wir weniger Bilder haben als erwartet, versuche, die fehlenden Bilder zu finden
+                if (expectedViewCount > 0 && images.length < expectedViewCount) {
+                    debugLog('Weniger Bilder als erwartet gefunden (' + images.length + ' vs ' + expectedViewCount + '), versuche fehlende Bilder zu finden');
+                    
+                    // Versuche, die fehlenden Bilder aus dem FPD-API zu bekommen
+                    if (window.fancyProductDesigner) {
+                        try {
+                            var viewInstances = window.fancyProductDesigner.viewInstances;
+                            
+                            for (var i = images.length; i < expectedViewCount; i++) {
+                                if (i < viewInstances.length) {
+                                    var viewInstance = viewInstances[i];
+                                    
+                                    if (viewInstance && viewInstance.toDataURL) {
+                                        try {
+                                            var viewDataURL = viewInstance.toDataURL({format: 'png'});
+                                            
+                                            if (viewDataURL && viewDataURL.indexOf('data:image') === 0) {
+                                                // Prüfe, ob die Daten-URL eine angemessene Länge hat
+                                                if (viewDataURL.length < 5000) {
+                                                    debugLog('Ansicht #' + (i+1) + ' hat verdächtig kurze Daten-URL: ' + viewDataURL.length + ' Zeichen, überspringe');
+                                                    
+                                                    // Verwende stattdessen das Originalbild, falls verfügbar
+                                                    if (i < originalGalleryCount) {
+                                                        var originalImage = originalGalleryImages[i];
+                                                        if (originalImage && originalImage.imgSrc) {
+                                                            debugLog('Verwende Originalbild für Ansicht #' + (i+1));
+                                                            images.push(originalImage.imgSrc);
+                                                        }
+                                                    }
+                                                    
+                                                    continue;
+                                                }
+                                                
+                                                images.push(viewDataURL);
+                                                debugLog('Ansicht #' + (i+1) + ' erfolgreich über FPD-API erfasst');
+                                            }
+                                        } catch (e) {
+                                            debugLog('Fehler beim Erfassen der Ansicht #' + (i+1) + ' über FPD-API', e);
+                                            
+                                            // Verwende stattdessen das Originalbild, falls verfügbar
+                                            if (i < originalGalleryCount) {
+                                                var originalImage = originalGalleryImages[i];
+                                                if (originalImage && originalImage.imgSrc) {
+                                                    debugLog('Verwende Originalbild für Ansicht #' + (i+1) + ' nach Fehler');
+                                                    images.push(originalImage.imgSrc);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e) {
+                            debugLog('Fehler beim Zugriff auf FPD-API', e);
+                        }
+                    }
+                }
+                
+                // Wenn wir immer noch weniger Bilder haben als erwartet, fülle mit Originalbildern auf
+                if (expectedViewCount > 0 && images.length < expectedViewCount) {
+                    debugLog('Immer noch weniger Bilder als erwartet (' + images.length + ' vs ' + expectedViewCount + '), fülle mit Originalbildern auf');
+                    
+                    for (var i = images.length; i < expectedViewCount; i++) {
+                        if (i < originalGalleryCount) {
+                            var originalImage = originalGalleryImages[i];
+                            if (originalImage && originalImage.imgSrc) {
+                                debugLog('Füge Originalbild für Position #' + (i+1) + ' hinzu');
+                                images.push(originalImage.imgSrc);
+                            }
+                        }
+                    }
+                }
+                
+                // Wenn wir genügend Bilder haben, zeige sie an und ersetze die Galerie
+                if (images.length > 0) {
+                    debugLog('Gültige Canvas-Bilder gefunden: ' + images.length);
+                    debugLog(images.length + ' Bilder erfasst: ', images);
+                    showDebugImages(images);
+                    replaceGalleryWithCanvasImages(images);
+                } else {
+                    debugLog('Keine gültigen Canvas-Bilder gefunden');
+                }
+            } catch (e) {
+                debugLog('Fehler bei der Canvas-Erfassung', e);
             }
-            
-            debugLog('Canvas-Erfassung abgeschlossen, ' + images.length + ' Bilder gefunden');
-            return images;
         }
         
         // Hilfsfunktion: Prüft, ob ein Canvas leer ist
         function isCanvasEmpty(canvas) {
             try {
-                var ctx = canvas.getContext('2d');
-                var pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                
-                // Prüfe, ob alle Pixel transparent sind
-                for (var i = 0; i < pixelData.length; i += 4) {
-                    // Wenn Alpha-Kanal nicht 0 ist, ist das Canvas nicht leer
-                    if (pixelData[i+3] !== 0) {
-                        return false;
-                    }
+                // Prüfe, ob das Canvas-Element gültig ist
+                if (!canvas || !canvas.getContext || typeof canvas.getContext !== 'function') {
+                    debugLog('Ungültiges Canvas-Element');
+                    return false;
                 }
                 
-                return true;
+                // Prüfe, ob das Canvas eine Größe hat
+                if (canvas.width <= 0 || canvas.height <= 0) {
+                    debugLog('Canvas hat keine gültige Größe: ' + canvas.width + 'x' + canvas.height);
+                    return false;
+                }
+                
+                // Versuche, die Bilddaten zu bekommen
+                try {
+                    var ctx = canvas.getContext('2d');
+                    var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    var data = imageData.data;
+                    
+                    // Prüfe, ob alle Pixel transparent sind
+                    for (var i = 0; i < data.length; i += 4) {
+                        // Wenn der Alpha-Kanal nicht 0 ist, ist das Canvas nicht leer
+                        if (data[i + 3] !== 0) {
+                            return false;
+                        }
+                    }
+                    
+                    // Wenn wir hier ankommen, sind alle Pixel transparent
+                    return true;
+                } catch (e) {
+                    // Wenn wir einen CORS-Fehler bekommen, versuchen wir eine alternative Methode
+                    if (e.name === 'SecurityError' || e.message.indexOf('cross-origin') !== -1) {
+                        debugLog('CORS-Fehler beim Prüfen des Canvas, versuche alternative Methode');
+                        
+                        try {
+                            // Alternative Methode: Konvertiere das Canvas in eine Daten-URL und prüfe die Größe
+                            var dataURL = canvas.toDataURL('image/png');
+                            
+                            // Ein leeres Canvas erzeugt typischerweise eine sehr kleine Daten-URL
+                            // (weniger als 100 Zeichen für ein komplett transparentes Bild)
+                            if (dataURL.length < 5000) {
+                                debugLog('Canvas scheint leer zu sein (kleine Daten-URL: ' + dataURL.length + ' Zeichen)');
+                                return true;
+                            }
+                            
+                            // Wenn die Daten-URL größer ist, enthält das Canvas wahrscheinlich Daten
+                            return false;
+                        } catch (e2) {
+                            debugLog('Fehler bei der alternativen Canvas-Prüfung', e2);
+                            // Im Zweifelsfall nehmen wir an, dass das Canvas nicht leer ist
+                            return false;
+                        }
+                    }
+                    
+                    debugLog('Fehler beim Prüfen des Canvas', e);
+                    // Im Zweifelsfall nehmen wir an, dass das Canvas nicht leer ist
+                    return false;
+                }
             } catch (e) {
-                // Bei Fehlern (z.B. CORS) nehmen wir an, dass das Canvas nicht leer ist
-                debugLog('Fehler beim Prüfen, ob Canvas leer ist', e);
+                debugLog('Unerwarteter Fehler beim Prüfen des Canvas', e);
+                // Im Zweifelsfall nehmen wir an, dass das Canvas nicht leer ist
                 return false;
             }
         }
@@ -325,21 +503,48 @@ jQuery(document).ready(function($) {
                     
                     debugLog('Versuche ' + viewInstances.length + ' Ansichten direkt zu erfassen');
                     
+                    // Erfasse die aktuelle Ansicht zuerst
+                    var currentViewIndex = window.fancyProductDesigner.currentViewIndex;
+                    debugLog('Aktuelle Ansicht: ' + currentViewIndex);
+                    
+                    // Sortiere die Ansichten nach Index
+                    var sortedViewIndices = [];
                     for (var i = 0; i < viewInstances.length; i++) {
-                        if (viewInstances[i]) {
+                        sortedViewIndices.push(i);
+                    }
+                    
+                    // Erfasse die Bilder in der richtigen Reihenfolge
+                    for (var i = 0; i < sortedViewIndices.length; i++) {
+                        var viewIndex = sortedViewIndices[i];
+                        if (viewInstances[viewIndex]) {
                             try {
-                                debugLog('Erfasse Ansicht ' + i);
-                                var dataURL = viewInstances[i].toDataURL();
+                                debugLog('Erfasse Ansicht ' + viewIndex);
+                                var dataURL = viewInstances[viewIndex].toDataURL();
                                 
                                 // Prüfe, ob das Bild gültig ist
                                 if (dataURL && dataURL.indexOf('data:image') === 0) {
                                     images.push(dataURL);
-                                    debugLog('Ansicht ' + i + ' erfolgreich erfasst');
+                                    debugLog('Ansicht ' + viewIndex + ' erfolgreich erfasst');
                                 } else {
-                                    debugLog('Ungültiges Bild für Ansicht ' + i + ' gefunden, überspringe');
+                                    debugLog('Ungültiges Bild für Ansicht ' + viewIndex + ' gefunden, überspringe');
                                 }
                             } catch (e) {
-                                debugLog('Fehler beim Erfassen der Ansicht ' + i, e);
+                                debugLog('Fehler beim Erfassen der Ansicht ' + viewIndex, e);
+                                
+                                // Versuche es mit einer alternativen Methode für diese Ansicht
+                                try {
+                                    debugLog('Versuche alternative Methode für Ansicht ' + viewIndex);
+                                    var stage = viewInstances[viewIndex].stage;
+                                    if (stage && stage.toDataURL) {
+                                        var stageDataURL = stage.toDataURL();
+                                        if (stageDataURL && stageDataURL.indexOf('data:image') === 0) {
+                                            images.push(stageDataURL);
+                                            debugLog('Ansicht ' + viewIndex + ' erfolgreich über Stage erfasst');
+                                        }
+                                    }
+                                } catch (e2) {
+                                    debugLog('Fehler bei alternativer Methode für Ansicht ' + viewIndex, e2);
+                                }
                             }
                         }
                     }
@@ -347,6 +552,33 @@ jQuery(document).ready(function($) {
                     if (images.length > 0) {
                         debugLog('Bilder über viewInstances erfolgreich abgerufen: ' + images.length);
                         return images;
+                    }
+                }
+                
+                // Methode 3: Versuche, die Bilder über getProductDataURL zu erfassen
+                if (window.fancyProductDesigner && typeof window.fancyProductDesigner.getProductDataURL === 'function') {
+                    try {
+                        debugLog('Versuche Bilder über getProductDataURL zu erfassen');
+                        var productDataURL = window.fancyProductDesigner.getProductDataURL();
+                        
+                        if (productDataURL && typeof productDataURL === 'string' && productDataURL.indexOf('data:image') === 0) {
+                            debugLog('Bild über getProductDataURL erfolgreich abgerufen');
+                            return [productDataURL];
+                        } else if (productDataURL && Array.isArray(productDataURL)) {
+                            var validProductImages = [];
+                            for (var i = 0; i < productDataURL.length; i++) {
+                                if (productDataURL[i] && productDataURL[i].indexOf('data:image') === 0) {
+                                    validProductImages.push(productDataURL[i]);
+                                }
+                            }
+                            
+                            if (validProductImages.length > 0) {
+                                debugLog('Bilder über getProductDataURL erfolgreich abgerufen: ' + validProductImages.length);
+                                return validProductImages;
+                            }
+                        }
+                    } catch (e) {
+                        debugLog('Fehler bei getProductDataURL', e);
                     }
                 }
                 
@@ -412,8 +644,6 @@ jQuery(document).ready(function($) {
                                     debugLog('Bild über DOM-Manipulation erfolgreich abgerufen');
                                     showDebugImages(images);
                                     replaceGalleryWithCanvasImages(images);
-                                } else {
-                                    debugLog('Ungültiges Bild über DOM-Manipulation erhalten, überspringe');
                                 }
                             } catch (e) {
                                 debugLog('Fehler bei Canvas-Konvertierung', e);
@@ -528,8 +758,15 @@ jQuery(document).ready(function($) {
             // Filtere ungültige Bilder heraus
             var validImages = [];
             for (var i = 0; i < images.length; i++) {
-                if (images[i] && images[i].indexOf('data:image') === 0) {
+                if (images[i] && typeof images[i] === 'string' && images[i].indexOf('data:image') === 0) {
+                    // Prüfe, ob die Daten-URL vollständig ist (mindestens 100 Zeichen)
+                    if (images[i].length < 100) {
+                        debugLog('Bild #' + (i+1) + ' hat verdächtig kurze Daten-URL: ' + images[i].length + ' Zeichen, überspringe');
+                        continue;
+                    }
+                    
                     validImages.push(images[i]);
+                    debugLog('Bild #' + (i+1) + ' ist gültig (Länge: ' + images[i].length + ')');
                 } else {
                     debugLog('Bild #' + (i+1) + ' ist ungültig und wird übersprungen');
                 }
@@ -562,24 +799,134 @@ jQuery(document).ready(function($) {
             
             debugLog('Gefunden: ' + $galleryImages.length + ' Galerie-Bilder');
             
+            // Speichere die Anzahl der ursprünglichen Galeriebilder
+            var originalGalleryCount = $galleryImages.length;
+            debugLog('Ursprüngliche Anzahl der Galeriebilder: ' + originalGalleryCount);
+            
+            // Wenn wir weniger Bilder haben als ursprünglich in der Galerie, füllen wir mit den Originalbildern auf
+            if (validImages.length < originalGalleryCount) {
+                debugLog('Weniger Bilder als ursprünglich (' + validImages.length + ' vs ' + originalGalleryCount + '), fülle mit Originalbildern auf');
+                
+                // Prüfe, ob wir Originalbilder haben
+                if (!originalGalleryImages || originalGalleryImages.length === 0) {
+                    debugLog('Keine Originalbilder zum Auffüllen vorhanden');
+                } else {
+                    // Wir verwenden nur so viele Originalbilder wie nötig, um die Galerie zu füllen
+                    for (var i = validImages.length; i < originalGalleryCount; i++) {
+                        if (i < originalGalleryImages.length) {
+                            var originalImage = originalGalleryImages[i];
+                            if (originalImage && originalImage.imgSrc) {
+                                debugLog('Füge Originalbild #' + (i+1) + ' zur Galerie hinzu');
+                                validImages.push(originalImage.imgSrc);
+                            } else {
+                                debugLog('Originalbild #' + (i+1) + ' ist ungültig, kann nicht hinzugefügt werden');
+                                
+                                // Versuche, das Bild aus dem DOM zu extrahieren
+                                var $originalImg = $galleryImages.eq(i).find('img');
+                                if ($originalImg.length > 0) {
+                                    var originalSrc = $originalImg.attr('src');
+                                    if (originalSrc) {
+                                        debugLog('Verwende DOM-Bild für Position #' + (i+1));
+                                        validImages.push(originalSrc);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                debugLog('Nach Auffüllung: ' + validImages.length + ' Bilder');
+            }
+            
+            // Prüfe jedes Bild auf Gültigkeit
+            for (var i = 0; i < validImages.length; i++) {
+                // Prüfe, ob das Bild eine gültige Daten-URL ist
+                if (validImages[i].indexOf('data:image') === 0) {
+                    // Prüfe, ob die Daten-URL vollständig ist
+                    // Ein typisches Bild hat mindestens 10.000 Zeichen
+                    // Wenn das Bild weniger als 10.000 Zeichen hat, ist es wahrscheinlich beschädigt
+                    if (validImages[i].length < 10000) {
+                        debugLog('Bild #' + (i+1) + ' hat verdächtig kurze Daten-URL: ' + validImages[i].length + ' Zeichen');
+                        
+                        // Ersetze das ungültige Bild mit dem Originalbild, falls verfügbar
+                        if (i < originalGalleryImages.length && originalGalleryImages[i] && originalGalleryImages[i].imgSrc) {
+                            debugLog('Ersetze ungültiges Bild #' + (i+1) + ' mit Originalbild');
+                            validImages[i] = originalGalleryImages[i].imgSrc;
+                        }
+                    }
+                }
+            }
+            
             // Ersetze die Hauptbilder
             $galleryImages.each(function(index) {
                 if (index < validImages.length) {
                     var $img = $(this).find('img');
                     var $a = $(this).find('a');
                     
-                    if ($img.length > 0) {
-                        $img.attr('src', validImages[index]);
-                        $img.attr('data-src', validImages[index]);
-                        $img.attr('data-large_image', validImages[index]);
-                        $img.attr('srcset', '');
-                        debugLog('Hauptbild #' + (index+1) + ' ersetzt');
+                    // Prüfe, ob das Bild gültig ist
+                    var currentImage = validImages[index];
+                    var isValidImage = currentImage && typeof currentImage === 'string';
+                    var isDataUrl = isValidImage && currentImage.indexOf('data:image') === 0;
+                    var isDataUrlValid = isDataUrl && currentImage.length >= 10000;
+                    var isHttpUrl = isValidImage && (currentImage.indexOf('http://') === 0 || currentImage.indexOf('https://') === 0);
+                    
+                    // Wenn es eine Daten-URL ist, aber zu kurz, versuche das Originalbild zu verwenden
+                    if (isDataUrl && !isDataUrlValid) {
+                        debugLog('Bild #' + (index+1) + ' hat ungültige Daten-URL (zu kurz), versuche Originalbild');
+                        
+                        if (index < originalGalleryImages.length && originalGalleryImages[index] && originalGalleryImages[index].imgSrc) {
+                            currentImage = originalGalleryImages[index].imgSrc;
+                            isValidImage = true;
+                            isDataUrl = false;
+                            isHttpUrl = currentImage.indexOf('http://') === 0 || currentImage.indexOf('https://') === 0;
+                            debugLog('Bild #' + (index+1) + ' durch Originalbild ersetzt: ' + currentImage);
+                        }
                     }
                     
-                    if ($a.length > 0) {
-                        $a.attr('href', validImages[index]);
-                        debugLog('Link für Bild #' + (index+1) + ' ersetzt');
+                    if (isValidImage && (isDataUrlValid || isHttpUrl)) {
+                        if ($img.length > 0) {
+                            $img.attr('src', currentImage);
+                            $img.attr('data-src', currentImage);
+                            $img.attr('data-large_image', currentImage);
+                            $img.attr('srcset', '');
+                            debugLog('Hauptbild #' + (index+1) + ' ersetzt' + (isDataUrl ? ' (Daten-URL)' : ' (HTTP-URL)'));
+                        }
+                        
+                        if ($a.length > 0) {
+                            $a.attr('href', currentImage);
+                            debugLog('Link für Bild #' + (index+1) + ' ersetzt');
+                        }
+                        
+                        // Stelle sicher, dass das Bild sichtbar ist
+                        $(this).show();
+                    } else {
+                        debugLog('Ungültiges Bild für Position #' + (index+1) + ', verwende Original');
+                        
+                        // Versuche, das Originalbild zu verwenden
+                        if (index < originalGalleryImages.length && originalGalleryImages[index] && originalGalleryImages[index].imgSrc) {
+                            var originalSrc = originalGalleryImages[index].imgSrc;
+                            
+                            if ($img.length > 0) {
+                                $img.attr('src', originalSrc);
+                                $img.attr('data-src', originalSrc);
+                                $img.attr('data-large_image', originalSrc);
+                                $a.attr('href', originalSrc);
+                                debugLog('Hauptbild #' + (index+1) + ' mit Originalbild ersetzt');
+                            }
+                            
+                            if ($a.length > 0) {
+                                $a.attr('href', originalSrc);
+                                debugLog('Link für Bild #' + (index+1) + ' mit Originalbild ersetzt');
+                            }
+                            
+                            // Stelle sicher, dass das Bild sichtbar ist
+                            $(this).show();
+                        }
                     }
+                } else {
+                    // Verstecke überschüssige Bilder
+                    $(this).hide();
+                    debugLog('Überschüssiges Bild #' + (index+1) + ' versteckt');
                 }
             });
             
@@ -591,31 +938,18 @@ jQuery(document).ready(function($) {
                     debugLog('Gefunden: ' + $thumbs.length + ' Thumbnail-Bilder');
                     
                     $thumbs.each(function(index) {
+                        var $thumbLi = $(this).parent();
+                        
                         if (index < validImages.length) {
                             $(this).attr('src', validImages[index]);
+                            $thumbLi.show();
                             debugLog('Thumbnail #' + (index+1) + ' ersetzt');
+                        } else {
+                            // Verstecke überschüssige Thumbnails
+                            $thumbLi.hide();
+                            debugLog('Überschüssiges Thumbnail #' + (index+1) + ' versteckt');
                         }
                     });
-                }
-            }
-            
-            // Wenn wir weniger Bilder haben als in der Galerie, blenden wir die überschüssigen aus
-            if (validImages.length < $galleryImages.length) {
-                for (var i = validImages.length; i < $galleryImages.length; i++) {
-                    $($galleryImages[i]).hide();
-                    debugLog('Überschüssiges Galerie-Bild #' + (i+1) + ' ausgeblendet');
-                }
-            }
-            
-            // Wenn wir Thumbnails haben, aber weniger als in der Galerie, blenden wir die überschüssigen aus
-            if ($galleryThumbnails.length > 0) {
-                var $thumbs = $galleryThumbnails.find('li');
-                
-                if (validImages.length < $thumbs.length) {
-                    for (var i = validImages.length; i < $thumbs.length; i++) {
-                        $($thumbs[i]).hide();
-                        debugLog('Überschüssiges Thumbnail #' + (i+1) + ' ausgeblendet');
-                    }
                 }
             }
             
@@ -623,6 +957,16 @@ jQuery(document).ready(function($) {
             setTimeout(function() {
                 $(window).trigger('resize');
                 debugLog('Resize-Event ausgelöst');
+                
+                // Zusätzlich FlexSlider neu initialisieren
+                if ($gallery.data('flexslider')) {
+                    try {
+                        $gallery.flexslider('resize');
+                        debugLog('FlexSlider neu initialisiert');
+                    } catch (e) {
+                        debugLog('Fehler beim Neu-Initialisieren des FlexSliders', e);
+                    }
+                }
             }, 100);
             
             debugLog('Galerie erfolgreich ersetzt');
@@ -640,13 +984,13 @@ jQuery(document).ready(function($) {
                     
                     if ($currentImage.length) {
                         var $img = $currentImage.find('img');
-                        var $link = $currentImage.find('a');
+                        var $a = $currentImage.find('a');
                         
                         // Original-Bilder wiederherstellen
                         $img.attr('src', original.imgSrc);
                         $img.attr('data-src', original.imgDataSrc);
                         $img.attr('data-large_image', original.imgDataLargeImage);
-                        $link.attr('href', original.linkHref);
+                        $a.attr('href', original.linkHref);
                         
                         debugLog('Originalbild #' + (original.index+1) + ' wiederhergestellt');
                     }
@@ -684,42 +1028,12 @@ jQuery(document).ready(function($) {
             
             console.log('FPD DEBUG: ' + images.length + ' Bilder erfasst:');
             
-            // Erstelle ein Debug-Element auf der Seite, wenn es noch nicht existiert
-            if (!$('#fpd-debug-output').length) {
-                $('body').append('<div id="fpd-debug-output" style="position: fixed; bottom: 10px; right: 10px; background: white; border: 1px solid #ccc; padding: 15px; z-index: 9999; width: 600px; max-height: 500px; overflow: auto; box-shadow: 0 0 10px rgba(0,0,0,0.2);"><h3 style="margin-top: 0;">FPD Debug: Erfasste Bilder (' + images.length + ')</h3><div id="fpd-debug-images"></div><div style="margin-top: 15px; text-align: right;"><button id="fpd-debug-close" style="padding: 5px 10px; background: #f44336; color: white; border: none; cursor: pointer;">Schließen</button></div></div>');
-                
-                // Schließen-Button
-                $('#fpd-debug-close').on('click', function() {
-                    $('#fpd-debug-output').remove();
-                });
-            } else {
-                // Aktualisiere die Überschrift mit der aktuellen Anzahl der Bilder
-                $('#fpd-debug-output h3').text('FPD Debug: Erfasste Bilder (' + images.length + ')');
-            }
-            
-            // Debug-Element leeren
-            $('#fpd-debug-images').empty();
-            
-            // Bilder hinzufügen
+            // Nur Logging in der Konsole, kein visuelles Debug-Fenster mehr
             for (var i = 0; i < images.length; i++) {
                 if (images[i]) {
-                    // Überprüfe, ob das Bild gültig ist
                     var isValidImage = images[i].indexOf('data:image') === 0;
-                    var imgHtml = isValidImage 
-                        ? '<img src="' + images[i] + '" style="max-width: 100%; height: auto; border: 1px solid #ddd;" />'
-                        : '<div style="width: 100%; height: 150px; background: #f5f5f5; display: flex; justify-content: center; align-items: center; border: 1px solid #ddd;">Ungültiges Bild</div>';
-                    
-                    // Erstelle einen kurzen Preview-String für die Anzeige (nur die ersten 50 Zeichen)
-                    var previewString = images[i].substring(0, 50) + '...';
-                    
-                    $('#fpd-debug-images').append(
-                        '<div style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">' +
-                        '<strong style="font-size: 16px; display: block; margin-bottom: 10px;">Bild #' + (i+1) + (isValidImage ? '' : ' (Ungültig)') + '</strong>' +
-                        '<div style="display: flex; align-items: start;">' +
-                        '<div style="flex: 0 0 200px; margin-right: 15px;">' + imgHtml + '</div>' +
-                        '<div style="flex: 1;"><textarea style="width: 100%; height: 150px; font-family: monospace; font-size: 12px; padding: 5px;">' + previewString + '</textarea></div>' +
-                        '</div></div>'
-                    );
+                    var imageLength = images[i].length;
+                    console.log('FPD DEBUG: Bild #' + (i+1) + (isValidImage ? ' (Gültig, Länge: ' + imageLength + ')' : ' (Ungültig)'));
                 }
             }
         }
